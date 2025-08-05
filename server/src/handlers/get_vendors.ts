@@ -1,13 +1,19 @@
 
+import { db } from '../db';
+import { vendorsTable } from '../db/schema';
 import { type Vendor } from '../schema';
+import { asc } from 'drizzle-orm';
 
 export async function getVendors(): Promise<Vendor[]> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching all vendors for dropdown/selection purposes.
-    // Steps:
-    // 1. Query all vendors from database
-    // 2. Order by name alphabetically
-    // 3. Return array of vendor objects
-    
-    return Promise.resolve([]);
+  try {
+    const results = await db.select()
+      .from(vendorsTable)
+      .orderBy(asc(vendorsTable.name))
+      .execute();
+
+    return results;
+  } catch (error) {
+    console.error('Get vendors failed:', error);
+    throw error;
+  }
 }

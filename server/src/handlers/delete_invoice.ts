@@ -1,18 +1,36 @@
 
+import { db } from '../db';
+import { invoicesTable } from '../db/schema';
 import { type GetInvoiceByIdInput } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export async function deleteInvoice(input: GetInvoiceByIdInput): Promise<{ success: boolean; deleted_id: number | null }> {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is deleting an invoice and its related data.
-    // Steps:
-    // 1. Find invoice by ID
-    // 2. Delete associated line items (cascade should handle this)
-    // 3. Delete invoice record
-    // 4. Optionally delete associated file from storage
-    // 5. Return success status and deleted ID
-    
-    return Promise.resolve({
+  try {
+    // Check if invoice exists first
+    const existingInvoice = await db.select()
+      .from(invoicesTable)
+      .where(eq(invoicesTable.id, input.id))
+      .execute();
+
+    if (existingInvoice.length === 0) {
+      return {
         success: false,
         deleted_id: null
-    });
+      };
+    }
+
+    // Delete the invoice (line items will be deleted automatically due to cascade)
+    const result = await db.delete(invoicesTable)
+      .where(eq(invoicesTable.id, input.id))
+      .returning({ id: invoicesTable.id })
+      .execute();
+
+    return {
+      success: result.length > 0,
+      deleted_id: result.length > 0 ? result[0].id : null
+    };
+  } catch (error) {
+    console.error('Invoice deletion failed:', error);
+    throw error;
+  }
 }
